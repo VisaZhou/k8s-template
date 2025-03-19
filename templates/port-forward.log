@@ -1,0 +1,16 @@
+Forwarding from 127.0.0.1:8080 -> 8080
+Forwarding from [::1]:8080 -> 8080
+Handling connection for 8080
+Handling connection for 8080
+Handling connection for 8080
+Handling connection for 8080
+Handling connection for 8080
+Handling connection for 8080
+Handling connection for 8080
+Handling connection for 8080
+Handling connection for 8080
+Handling connection for 8080
+Handling connection for 8080
+E0225 15:52:23.412339   70369 portforward.go:424] "Unhandled Error" err="an error occurred forwarding 8080 -> 8080: error forwarding port 8080 to pod e76e5a5e899edd08c51f39e2bbc0767aeceafeaa06b206b0515511f73e3e915f, uid : container not running (e76e5a5e899edd08c51f39e2bbc0767aeceafeaa06b206b0515511f73e3e915f)"
+E0225 15:52:23.412581   70369 portforward.go:424] "Unhandled Error" err="an error occurred forwarding 8080 -> 8080: error forwarding port 8080 to pod e76e5a5e899edd08c51f39e2bbc0767aeceafeaa06b206b0515511f73e3e915f, uid : container not running (e76e5a5e899edd08c51f39e2bbc0767aeceafeaa06b206b0515511f73e3e915f)"
+error: lost connection to pod

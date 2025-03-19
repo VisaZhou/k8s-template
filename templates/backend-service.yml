@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend-boot-template  # 服务会选择匹配此标签的 Pod
+  ports:
+    - protocol: TCP
+      port: 8080         # Service 内部端口
+      targetPort: 8080   # Pod 内部端口
+  type: ClusterIP  # 仅限于集群内访问。
