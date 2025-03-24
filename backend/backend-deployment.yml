@@ -15,7 +15,8 @@ spec:
       containers:
         - image: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/backend-boot-template:0.0.3
           name: backend-boot-template
-          imagePullPolicy: Always  # 确保每次都拉取最新镜像,否则版本号相同的情况下不会重新拉取
+          #imagePullPolicy: Always  确保每次都拉取最新镜像,否则版本号相同的情况下不会重新拉取
+          imagePullPolicy: IfNotPresent # 如果本地有这个镜像，K8s 就不会去远程拉取。
           ports:
             - containerPort: 8080
           livenessProbe:  # 存活探针
