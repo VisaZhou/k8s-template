@@ -3,23 +3,23 @@ entries:
   helm-backend:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2025-03-26T15:26:53.111706+08:00"
+    created: "2025-03-26T15:41:31.748992+08:00"
     description: A Helm chart for Kubernetes
     digest: 263c3b90c541104fd1efa6724e06d8e62c07a8c0d29618035d7dba7488b986a0
     name: helm-backend
     type: application
     urls:
-    - helm-backend-0.1.0.tgz
+    - https://visazhou.github.io/k8s-template/helm-backend-0.1.0.tgz
     version: 0.1.0
   helm-mysql:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2025-03-26T15:26:53.112153+08:00"
+    created: "2025-03-26T15:41:31.749262+08:00"
     description: A Helm chart for Kubernetes
     digest: 9b59d61f0302bf7c51a25913ff83091779f8b3aa1c899c6fc890af1933b98312
     name: helm-mysql
     type: application
     urls:
-    - helm-mysql-0.1.0.tgz
+    - https://visazhou.github.io/k8s-template/helm-mysql-0.1.0.tgz
     version: 0.1.0
-generated: "2025-03-26T15:26:53.110869+08:00"
+generated: "2025-03-26T15:41:31.748659+08:00"
