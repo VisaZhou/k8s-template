@@ -1,24 +1,13 @@
+# Chart 的 API 版本（Helm 3 使用 v2）
 apiVersion: v2
+# Chart 的名称
 name: helm-mysql
+# Chart 的简短描述
 description: A Helm chart for Kubernetes
-
-# A chart can be either an 'application' or a 'library' chart.
-#
-# Application charts are a collection of templates that can be packaged into versioned archives
-# to be deployed.
-#
-# Library charts provide useful utilities or functions for the chart developer. They're included as
-# a dependency of application charts to inject those utilities and functions into the rendering
-# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+# type: application 这是默认值，表示该 Chart 是一个应用程序 Chart，它定义了 Kubernetes 资源模板，并且可以直接被部署到 Kubernetes 集群。
+# type: library：表示该 Chart 是一个库 Chart，不是直接用于部署的应用程序 Chart。它主要是提供一些模板或函数，供其他 Helm Chart（通常是 application 类型的 Chart）作为依赖使用。
 type: application
-
-# This is the chart version. This version number should be incremented each time you make changes
-# to the chart and its templates, including the app version.
-# Versions are expected to follow Semantic Versioning (https://semver.org/)
+# Chart 的版本，遵循语义化版本（semver）
 version: 0.1.0
-
-# This is the version number of the application being deployed. This version number should be
-# incremented each time you make changes to the application. Versions are not expected to
-# follow Semantic Versioning. They should reflect the version the application is using.
-# It is recommended to use it with quotes.
+# 应用程序的版本（通常是你部署的应用版本）
 appVersion: "1.16.0"
