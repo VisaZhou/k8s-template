@@ -1,0 +1,34 @@
+service:
+  type: ClusterIP
+  port: 8848
+
+ingress:
+  enabled: false
+
+name:
+  container: nacos
+  initContainer: mysql-init
+  service: nacos-service
+  cluster: nacos-cluster
+  volume: nacos-init-script
+
+image:
+  container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/nacos-server:v2.5.0
+  initContainer: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/debian:bullseye-slim
+  imagePullPolicy: IfNotPresent
+  replicas: 1
+  imagePullSecret: my-registry-secret
+
+ConfigMap:
+  name: nacos-init-mysql
+  fileName: nacos-init-mysql.sql
+  filePath: /nacos-init-mysql.sql
+
+mysql:
+  host: mysql-service.default.svc.cluster.local  # MySQL 服务的地址
+  port: 3306  # MySQL 服务的端口
+  user: root  # MySQL 用户名
+  password: zxj201328  # MySQL 密码
+  database: nacos_config # MySQL 数据库名称
+
+

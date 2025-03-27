@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.name.cluster }}
+spec:
+  serviceName: {{ .Values.name.service }}
+  replicas: {{ .Values.image.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name.container }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name.container }}
+    spec:
+      initContainers: # 由于需要执行mysql命令，所以需要一个初始化容器
+        - name: {{ .Values.name.initContainer }}
+          image: {{ .Values.image.initContainer}} # 使用 debian 轻量级镜像，执行mysql-client安装
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              echo "使用 apt 安装 mysql-client...";
+              apt-get update && apt-get install -y default-mysql-client;
+              echo "等待 MySQL 启动完成...";
+              until mysql -h {{ .Values.mysql.host }} -P {{ .Values.mysql.port }} -u {{ .Values.mysql.user }} -p"{{ .Values.mysql.password }}" -e "SELECT 1"; do
+                echo "等待 MySQL 启动...";
+                sleep 2;
+              done;
+              echo "MySQL 已就绪，开始初始化数据库...";
+              mysql -h {{ .Values.mysql.host }} -P {{ .Values.mysql.port }} -u {{ .Values.mysql.user }} -p"{{ .Values.mysql.password }}" < {{ .Values.ConfigMap.filePath }};
+              echo "数据库初始化完成，退出 initContainer";
+          volumeMounts:
+            - name: {{ .Values.name.volume}} # 名称与volumes中的名称一致
+              mountPath: {{ .Values.ConfigMap.filePath}}
+              subPath: {{ .Values.ConfigMap.fileName}}
+      containers:
+        - name: {{ .Values.name.container }}
+          image: {{ .Values.image.container }}
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          volumeMounts:
+            - name: {{ .Values.name.volume}} # 名称与volumes中的名称一致
+              mountPath: {{ .Values.ConfigMap.filePath}}
+              subPath: {{ .Values.ConfigMap.fileName}}
+          env:
+            - name: MODE
+              value: "standalone"
+            - name: SPRING_DATASOURCE_PLATFORM
+              value: "mysql"
+            - name: MYSQL_SERVICE_HOST
+              value: "{{ .Values.mysql.host }}"
+            - name: MYSQL_SERVICE_PORT
+              value: "{{ .Values.mysql.port }}"
+            - name: MYSQL_SERVICE_USER
+              value: "{{ .Values.mysql.user }}"
+            - name: MYSQL_SERVICE_PASSWORD
+              value: "{{ .Values.mysql.password }}"
+            - name: MYSQL_SERVICE_DB_NAME
+              value: "{{ .Values.mysql.database }}"
+      imagePullSecrets:
+        - name: {{ .Values.image.imagePullSecret }}
+      volumes:
+        - name: {{ .Values.name.volume}}
+          configMap:
+            name: {{ .Values.ConfigMap.name }}
