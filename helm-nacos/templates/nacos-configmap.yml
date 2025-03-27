@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.ConfigMap.name}}
+  name: {{ .Values.name.configMap}}
 data:
   {{ .Values.ConfigMap.fileName}}: |
     CREATE DATABASE IF NOT EXISTS nacos_config DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;

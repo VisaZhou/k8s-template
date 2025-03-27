@@ -1,16 +1,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-service
+  name: {{ .Values.name.service }}
 spec:
   selector:
-    app: mysql
+    app: {{ .Values.name.container }}
   ports:
     - protocol: TCP
       # Service 在 Kubernetes 集群内部暴露的端口
-      port: 3306
+      port: {{ .Values.service.port }}
       # pod 内部 MySQL 进程监听的端口
-      targetPort: 3306
+      targetPort: {{ .Values.service.port }}
   # clusterIP: None 让 Service 变成 无头服务，不会有 ClusterIP 进行负载均衡。
   #	适用于需要直接访问 Pod IP 的场景（如数据库、StatefulSet 组件）。
   #	Kubernetes DNS 解析会返回所有 Pod 的 IP，客户端可以自行决定连接哪个 Pod。

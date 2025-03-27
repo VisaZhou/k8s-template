@@ -1,35 +1,35 @@
 apiVersion: apps/v1 # 表示使用 apps 组的 v1 版本，通常用于 Deployment、StatefulSet 等资源。
 kind: Deployment
 metadata:
-  name: backend-deployment
+  name: {{ .Values.name.cluster }}  # Deployment 的名称
 spec:
-  replicas: 2  # 部署的 pod 副本数量。
+  replicas: {{ .Values.image.replicas}}  # 部署的 pod 副本数量。
   selector: # 表示 deployment 资源和 pod 资源关联的方式。
     matchLabels:
-      app: backend-boot-template  # 表示 deployment 会管理所有 labels=backend-boot-template 的 pod。
+      app: {{ .Values.name.container}} # 表示 deployment 会管理所有 labels=backend-boot-template 的 pod。
   template: # 定义了 pod 的配置、标签等。  
     metadata:
       labels:
-        app: backend-boot-template  # 和上面的 selector.matchLabels 对应起来。来表明 pod 是被 deployment 管理的，不用在template 里面加上 metadata.name 是因为 deployment 会自动为我们创建 pod 的唯一name。
+        app: {{ .Values.name.container}}  # 和上面的 selector.matchLabels 对应起来。来表明 pod 是被 deployment 管理的，不用在template 里面加上 metadata.name 是因为 deployment 会自动为我们创建 pod 的唯一name。
     spec:
       containers:
-        - image: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/backend-boot-template:0.0.3
-          name: backend-boot-template
+        - image: {{ .Values.image.container}}  # 容器的镜像
+          name: {{ .Values.name.container}}  # 容器的名称
           #imagePullPolicy: Always  确保每次都拉取最新镜像,否则版本号相同的情况下不会重新拉取
-          imagePullPolicy: IfNotPresent # 如果本地有这个镜像，K8s 就不会去远程拉取。
+          imagePullPolicy: {{ .Values.image.imagePullPolicy}} # 如果本地有这个镜像，K8s 就不会去远程拉取。
           ports:
-            - containerPort: 8080
+            - containerPort: {{ .Values.service.port}}  # 容器监听的端口
           livenessProbe:  # 存活探针
             httpGet:
               path: /actuator/health/liveness  # Actuator 存活探针端点
-              port: 8080
+              port: {{ .Values.service.port}}
             initialDelaySeconds: 10  # 容器启动后等待 10 秒开始检查
             periodSeconds: 5        # 每 5 秒检查一次
           readinessProbe:  # 就绪探针
             httpGet:
               path: /actuator/health/readiness  # Actuator 就绪探针端点
-              port: 8080
+              port: {{ .Values.service.port}}
             initialDelaySeconds: 5  # 容器启动后等待 5 秒开始检查
             periodSeconds: 5        # 每 5 秒检查一次
       imagePullSecrets:
-        - name: my-registry-secret  # 指定docker仓库 Secret
+        - name: {{ .Values.image.imagePullSecret}}  # 指定docker仓库 Secret

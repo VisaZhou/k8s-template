@@ -10,7 +10,14 @@ name:
   initContainer: mysql-init
   service: nacos-service
   cluster: nacos-cluster
+
+  # 与 volumeMounts 中的 name 一致
   volume: nacos-init-script
+  configMap: nacos-init-mysql
+
+  # 与 volumeMounts 中的 name 一致
+  pvc:
+  storageClass:
 
 image:
   container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/nacos-server:v2.5.0
@@ -20,10 +27,20 @@ image:
   imagePullSecret: my-registry-secret
 
 ConfigMap:
-  name: nacos-init-mysql
   fileName: nacos-init-mysql.sql
   filePath: /nacos-init-mysql.sql
 
+pvc:
+  storage:
+  accessModes:
+  path:
+
+storageClass:
+  provisioner:
+  reclaimPolicy:
+  volumeBindingMode:
+
+# 自定义配置
 mysql:
   host: mysql-service.default.svc.cluster.local  # MySQL 服务的地址
   port: 3306  # MySQL 服务的端口
