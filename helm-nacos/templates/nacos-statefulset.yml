@@ -45,6 +45,8 @@ spec:
               mountPath: {{ .Values.ConfigMap.filePath}}
               subPath: {{ .Values.ConfigMap.fileName}}
           env:
+            - name: NACOS_AUTH_ENABLE
+              value: "true"
             - name: MODE
               value: "standalone"
             - name: SPRING_DATASOURCE_PLATFORM

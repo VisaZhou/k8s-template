@@ -6,7 +6,7 @@ spec:
   replicas: {{ .Values.image.replicas}}  # 部署的 pod 副本数量。
   selector: # 表示 deployment 资源和 pod 资源关联的方式。
     matchLabels:
-      app: {{ .Values.name.container}} # 表示 deployment 会管理所有 labels=backend-boot-template 的 pod。
+      app: {{ .Values.name.container}} # 表示 deployment 会管理所有 labels=backend 的 pod。
   template: # 定义了 pod 的配置、标签等。  
     metadata:
       labels:
