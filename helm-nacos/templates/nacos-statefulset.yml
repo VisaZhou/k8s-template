@@ -15,20 +15,18 @@ spec:
     spec:
       initContainers: # 由于需要执行mysql命令，所以需要一个初始化容器
         - name: {{ .Values.name.initContainer }}
-          image: {{ .Values.image.initContainer}} # 使用 debian 轻量级镜像，执行mysql-client安装
+          image: {{ .Values.image.initContainer}} # # 由自己构建的初始化alpine轻量级服务器，自带mysql-client客户端。
+          # mariadb 默认使用ssl连接mysql，--ssl=0 代表不使用ssl连接mysql
           command:
             - "/bin/sh"
             - "-c"
             - |
-              echo "使用 apt 安装 mysql-client...";
-              apt-get update && apt-get install -y default-mysql-client;
-              echo "等待 MySQL 启动完成...";
-              until mysql -h {{ .Values.mysql.host }} -P {{ .Values.mysql.port }} -u {{ .Values.mysql.user }} -p"{{ .Values.mysql.password }}" -e "SELECT 1"; do
+              until mariadb -h {{ .Values.mysql.host }} -P {{ .Values.mysql.port }} -u {{ .Values.mysql.user }} -p"{{ .Values.mysql.password }}" --ssl=0 -e "SELECT 1"; do
                 echo "等待 MySQL 启动...";
                 sleep 2;
               done;
               echo "MySQL 已就绪，开始初始化数据库...";
-              mysql -h {{ .Values.mysql.host }} -P {{ .Values.mysql.port }} -u {{ .Values.mysql.user }} -p"{{ .Values.mysql.password }}" < {{ .Values.ConfigMap.filePath }};
+              mysql -h {{ .Values.mysql.host }} -P {{ .Values.mysql.port }} -u {{ .Values.mysql.user }} -p"{{ .Values.mysql.password }}" --ssl=0 < {{ .Values.ConfigMap.filePath }};
               echo "数据库初始化完成，退出 initContainer";
           volumeMounts:
             - name: {{ .Values.name.volume}} # 名称与volumes中的名称一致
@@ -45,10 +43,15 @@ spec:
               mountPath: {{ .Values.ConfigMap.filePath}}
               subPath: {{ .Values.ConfigMap.fileName}}
           env:
+            # 开启 nacos 的鉴权功能
             - name: NACOS_AUTH_ENABLE
               value: "true"
+            - name: NACOS_AUTH_TOKEN
+              value: "zHC5a20FyWClePf8W7LLGNAVY+X8jmHrhQ6+UKdXRcM="  # 这个是 Base64 编码后的 32 字节密钥，生成：openssl rand -base64 32
+            # 单机模式
             - name: MODE
               value: "standalone"
+            # nacos 数据库配置
             - name: SPRING_DATASOURCE_PLATFORM
               value: "mysql"
             - name: MYSQL_SERVICE_HOST

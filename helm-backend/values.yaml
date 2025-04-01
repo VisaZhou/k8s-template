@@ -42,4 +42,5 @@ storageClass:
 
 
 # 自定义配置
-
+env:
+  profile: prod

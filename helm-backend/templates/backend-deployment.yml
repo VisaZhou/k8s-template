@@ -19,6 +19,9 @@ spec:
           imagePullPolicy: {{ .Values.image.imagePullPolicy}} # 如果本地有这个镜像，K8s 就不会去远程拉取。
           ports:
             - containerPort: {{ .Values.service.port}}  # 容器监听的端口
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.env.profile}}  # Spring Boot 的配置文件
           livenessProbe:  # 存活探针
             httpGet:
               path: /actuator/health/liveness  # Actuator 存活探针端点
