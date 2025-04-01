@@ -43,11 +43,15 @@ spec:
               mountPath: {{ .Values.ConfigMap.filePath}}
               subPath: {{ .Values.ConfigMap.fileName}}
           env:
-            # 开启 nacos 的鉴权功能
+            # 开启 nacos 的鉴权功能，密码默认使用 BCrypt 加密，生成命令：htpasswd -bnBC 10 "" "你的密码" | tr -d ':\n'
             - name: NACOS_AUTH_ENABLE
               value: "true"
+            # 关闭服务间身份认证
+            - name: NACOS_AUTH_USER_AGENT_AUTH_WHITE_ENABLE
+              value: "true"
+            # JWT生成token的key值，生成命令：openssl rand -base64 32
             - name: NACOS_AUTH_TOKEN
-              value: "zHC5a20FyWClePf8W7LLGNAVY+X8jmHrhQ6+UKdXRcM="  # 这个是 Base64 编码后的 32 字节密钥，生成：openssl rand -base64 32
+              value: "zHC5a20FyWClePf8W7LLGNAVY+X8jmHrhQ6+UKdXRcM="
             # 单机模式
             - name: MODE
               value: "standalone"
