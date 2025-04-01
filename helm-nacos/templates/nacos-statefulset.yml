@@ -15,7 +15,7 @@ spec:
     spec:
       initContainers: # 由于需要执行mysql命令，所以需要一个初始化容器
         - name: {{ .Values.name.initContainer }}
-          image: {{ .Values.image.initContainer}} # # 由自己构建的初始化alpine轻量级服务器，自带mysql-client客户端。
+          image: {{ .Values.image.initContainer}} # 由自己构建的初始化alpine轻量级服务器，自带mysql-client客户端。
           # mariadb 默认使用ssl连接mysql，--ssl=0 代表不使用ssl连接mysql
           command:
             - "/bin/sh"
@@ -46,9 +46,11 @@ spec:
             # 开启 nacos 的鉴权功能，密码默认使用 BCrypt 加密，生成命令：htpasswd -bnBC 10 "" "你的密码" | tr -d ':\n'
             - name: NACOS_AUTH_ENABLE
               value: "true"
-            # 关闭服务间身份认证
-            - name: NACOS_AUTH_USER_AGENT_AUTH_WHITE_ENABLE
-              value: "true"
+            # 服务间身份认证, 2.5.0 版本必须设置，已经不支持 userAgentAuthWhite 的白名单认证方式
+            - name: NACOS_AUTH_IDENTITY_KEY
+              value: "visage_key"
+            - name: NACOS_AUTH_IDENTITY_VALUE
+              value: "visage"
             # JWT生成token的key值，生成命令：openssl rand -base64 32
             - name: NACOS_AUTH_TOKEN
               value: "zHC5a20FyWClePf8W7LLGNAVY+X8jmHrhQ6+UKdXRcM="
