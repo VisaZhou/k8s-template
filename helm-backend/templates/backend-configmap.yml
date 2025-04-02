@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name.configMap}}
+data: # 初始化数据库, 以便 flyway 可以连接
+  {{ .Values.ConfigMap.fileName}}: |
+    /******************************************/
+    /*   库名称 = backend_center        */
+    /******************************************/
+    CREATE DATABASE IF NOT EXISTS backend_center DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;

@@ -7,28 +7,28 @@ ingress:
 
 name:
   container: backend
-  initContainer:
+  initContainer: mysql-init
   service: backend-service
   cluster: backend-cluster
 
   # 与 volumeMounts 中的 name 一致
-  volume:
-  configMap:
+  volume: backend-init-script
+  configMap: backend-init-mysql
 
   # 与 volumeMounts 中的 name 一致
   pvc:
   storageClass:
 
 image:
-  container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/backend-boot-template:0.0.3
-  initContainer:
-  imagePullPolicy: IfNotPresent
+  container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/backend-boot-template:0.0.4
+  initContainer: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/mysql-client:8.0
+  imagePullPolicy: Always
   replicas: 2
   imagePullSecret: my-registry-secret
 
 ConfigMap:
-  fileName:
-  filePath:
+  fileName: backend-init-mysql.sql
+  filePath: /backend-init-mysql.sql
 
 pvc:
   storage:
@@ -44,3 +44,10 @@ storageClass:
 # 自定义配置
 env:
   profile: prod
+  mysql:
+    host: mysql-service.default.svc.cluster.local  # MySQL 服务的地址
+    port: 3306  # MySQL 服务的端口
+    user: root  # MySQL 用户名
+    password: zxj201328  # MySQL 密码
+    database: backend_center # MySQL 数据库名称
+
