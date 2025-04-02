@@ -41,11 +41,19 @@ storageClass:
   volumeBindingMode:
 
 # 自定义配置
-mysql:
-  host: mysql-service.default.svc.cluster.local  # MySQL 服务的地址
-  port: 3306  # MySQL 服务的端口
-  user: root  # MySQL 用户名
-  password: zxj201328  # MySQL 密码
-  database: nacos_config # MySQL 数据库名称
+env:
+  mode: standalone
+  auth:
+    enable: true
+    tokenGenerateKey: zHC5a20FyWClePf8W7LLGNAVY+X8jmHrhQ6+UKdXRcM=
+    identityKey: visage_auth_key
+    identityValue: visage_auth_value
+  datasource: mysql
+  mysql:
+    host: mysql-service.default.svc.cluster.local  # MySQL 服务的地址
+    port: 3306  # MySQL 服务的端口
+    user: root  # MySQL 用户名
+    password: zxj201328  # MySQL 密码
+    database: nacos_config # MySQL 数据库名称
 
 

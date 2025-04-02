@@ -37,8 +37,16 @@ helm upgrade --install helm-nacos ./helm-nacos
 ```sh
 kubectl get pods -l app=nacos
 ```
+Nacos 2.5.0 版本首次部署完成后，需要手动初始化 nacos 账户密码。等待 Nacos 完全启动后，执行以下命令：
+```sh
+curl -X POST 'http://nacos-service.default.svc.cluster.local:8848/nacos/v1/auth/users/admin' -d 'password=nacos'
+```
+端口转发到本地 8847 端口，访问 http://localhost:8847/nacos 测试登录是否成功：
+```sh
+nohup kubectl port-forward pod/nacos-cluster-0 8847:8848 > port-forward.log 2>&1 &
+```
 
-### 3️⃣ 在 MySQL 中手动创建 `backend-boot-template` 数据库
+### 3️⃣ 部署 Backend
 在 `helm-backend` 启动之前，需要手动在 MySQL 中创建数据库 `backend-boot-template`。
 
 首先，进入 MySQL Pod：
@@ -50,8 +58,6 @@ kubectl exec -it $(kubectl get pods -l app=mysql -o jsonpath="{.items[0].metadat
 ```sql
 CREATE DATABASE IF NOT EXISTS `backend-boot-template`;
 ```
-
-### 4️⃣ 部署 Backend
 数据库创建完成后，可以部署后端服务：
 ```sh
 helm install helm-backend ./helm-backend

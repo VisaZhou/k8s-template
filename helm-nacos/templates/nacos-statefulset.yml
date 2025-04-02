@@ -21,12 +21,12 @@ spec:
             - "/bin/sh"
             - "-c"
             - |
-              until mariadb -h {{ .Values.mysql.host }} -P {{ .Values.mysql.port }} -u {{ .Values.mysql.user }} -p"{{ .Values.mysql.password }}" --ssl=0 -e "SELECT 1"; do
+              until mariadb -h {{ .Values.env.mysql.host }} -P {{ .Values.env.mysql.port }} -u {{ .Values.env.mysql.user }} -p"{{ .Values.env.mysql.password }}" --ssl=0 -e "SELECT 1"; do
                 echo "等待 MySQL 启动...";
                 sleep 2;
               done;
               echo "MySQL 已就绪，开始初始化数据库...";
-              mysql -h {{ .Values.mysql.host }} -P {{ .Values.mysql.port }} -u {{ .Values.mysql.user }} -p"{{ .Values.mysql.password }}" --ssl=0 < {{ .Values.ConfigMap.filePath }};
+              mysql -h {{ .Values.env.mysql.host }} -P {{ .Values.env.mysql.port }} -u {{ .Values.env.mysql.user }} -p"{{ .Values.env.mysql.password }}" --ssl=0 < {{ .Values.ConfigMap.filePath }};
               echo "数据库初始化完成，退出 initContainer";
           volumeMounts:
             - name: {{ .Values.name.volume}} # 名称与volumes中的名称一致
@@ -45,31 +45,31 @@ spec:
           env:
             # 开启 nacos 的鉴权功能，密码默认使用 BCrypt 加密，生成命令：htpasswd -bnBC 10 "" "你的密码" | tr -d ':\n'
             - name: NACOS_AUTH_ENABLE
-              value: "true"
+              value: "{{ .Values.env.auth.enable}}"
             # 服务间身份认证, 2.5.0 版本必须设置，已经不支持 userAgentAuthWhite 的白名单认证方式
             - name: NACOS_AUTH_IDENTITY_KEY
-              value: "visage_key"
+              value: "{{ .Values.env.auth.identityKey}}"
             - name: NACOS_AUTH_IDENTITY_VALUE
-              value: "visage"
+              value: "{{ .Values.env.auth.identityValue}}"
             # JWT生成token的key值，生成命令：openssl rand -base64 32
             - name: NACOS_AUTH_TOKEN
-              value: "zHC5a20FyWClePf8W7LLGNAVY+X8jmHrhQ6+UKdXRcM="
+              value: "{{ .Values.env.auth.tokenGenerateKey}}"
             # 单机模式
             - name: MODE
-              value: "standalone"
+              value: "{{ .Values.env.mode}}"
             # nacos 数据库配置
             - name: SPRING_DATASOURCE_PLATFORM
-              value: "mysql"
+              value: "{{ .Values.env.datasource}}"
             - name: MYSQL_SERVICE_HOST
-              value: "{{ .Values.mysql.host }}"
+              value: "{{ .Values.env.mysql.host }}"
             - name: MYSQL_SERVICE_PORT
-              value: "{{ .Values.mysql.port }}"
+              value: "{{ .Values.env.mysql.port }}"
             - name: MYSQL_SERVICE_USER
-              value: "{{ .Values.mysql.user }}"
+              value: "{{ .Values.env.mysql.user }}"
             - name: MYSQL_SERVICE_PASSWORD
-              value: "{{ .Values.mysql.password }}"
+              value: "{{ .Values.env.mysql.password }}"
             - name: MYSQL_SERVICE_DB_NAME
-              value: "{{ .Values.mysql.database }}"
+              value: "{{ .Values.env.mysql.database }}"
       imagePullSecrets:
         - name: {{ .Values.image.imagePullSecret }}
       volumes:
