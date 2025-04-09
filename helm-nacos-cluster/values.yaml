@@ -1,0 +1,59 @@
+service:
+  type: ClusterIP
+  port: 8848
+
+ingress:
+  enabled: false
+
+name:
+  container: nacos
+  initContainer: mysql-init
+  service: nacos-service
+  cluster: nacos-cluster
+
+  # 与 volumeMounts 中的 name 一致
+  volume: nacos-init-script
+  configMap: nacos-init-mysql
+
+  # 与 volumeMounts 中的 name 一致
+  pvc:
+  storageClass:
+
+image:
+  container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/nacos-server:v2.5.0
+  initContainer: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/mysql-client:8.0
+  imagePullPolicy: IfNotPresent
+  replicas: 2
+  imagePullSecret: my-registry-secret
+
+ConfigMap:
+  fileName: nacos-init-mysql.sql
+  filePath: /nacos-init-mysql.sql
+
+pvc:
+  storage:
+  accessModes:
+  path:
+
+storageClass:
+  provisioner:
+  reclaimPolicy:
+  volumeBindingMode:
+
+# 自定义配置
+env:
+  mode: cluster
+  auth:
+    enable: true
+    tokenGenerateKey: zHC5a20FyWClePf8W7LLGNAVY+X8jmHrhQ6+UKdXRcM=
+    identityKey: visage_auth_key
+    identityValue: visage_auth_value
+  datasource: mysql
+  mysql:
+    host: mysql-service.default.svc.cluster.local  # MySQL 服务的地址
+    port: 3306  # MySQL 服务的端口
+    user: root  # MySQL 用户名
+    password: zxj201328  # MySQL 密码
+    database: nacos_config # MySQL 数据库名称
+
+

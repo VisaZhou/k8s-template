@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.name.cluster }}
+spec:
+  serviceName: {{ .Values.name.service }}
+  replicas: {{ .Values.image.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name.container }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name.container }}
+    spec:
+      initContainers: # 由于需要执行mysql命令，所以需要一个初始化容器
+        - name: {{ .Values.name.initContainer }}
+          image: {{ .Values.image.initContainer}} # 由自己构建的初始化alpine轻量级服务器，自带mysql-client客户端。
+          # mariadb 默认使用ssl连接mysql，--ssl=0 代表不使用ssl连接mysql
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              until mariadb -h {{ .Values.env.mysql.host }} -P {{ .Values.env.mysql.port }} -u {{ .Values.env.mysql.user }} -p"{{ .Values.env.mysql.password }}" --ssl=0 -e "SELECT 1"; do
+                echo "等待 MySQL 启动...";
+                sleep 2;
+              done;
+              echo "MySQL 已就绪，开始初始化数据库...";
+              mysql -h {{ .Values.env.mysql.host }} -P {{ .Values.env.mysql.port }} -u {{ .Values.env.mysql.user }} -p"{{ .Values.env.mysql.password }}" --ssl=0 < {{ .Values.ConfigMap.filePath }};
+              echo "数据库初始化完成，退出 initContainer";
+          volumeMounts:
+            - name: {{ .Values.name.volume}} # 名称与volumes中的名称一致
+              mountPath: {{ .Values.ConfigMap.filePath}}
+              subPath: {{ .Values.ConfigMap.fileName}}
+      containers:
+        - name: {{ .Values.name.container }}
+          image: {{ .Values.image.container }}
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          volumeMounts:
+            - name: {{ .Values.name.volume}} # 名称与volumes中的名称一致
+              mountPath: {{ .Values.ConfigMap.filePath}}
+              subPath: {{ .Values.ConfigMap.fileName}}
+          env:
+            # 开启 nacos 的鉴权功能，密码默认使用 BCrypt 加密，生成命令：htpasswd -bnBC 10 "" "你的密码" | tr -d ':\n'
+            - name: NACOS_AUTH_ENABLE
+              value: "{{ .Values.env.auth.enable}}"
+            # 服务间身份认证, 2.5.0 版本必须设置，已经不支持 userAgentAuthWhite 的白名单认证方式
+            - name: NACOS_AUTH_IDENTITY_KEY
+              value: "{{ .Values.env.auth.identityKey}}"
+            - name: NACOS_AUTH_IDENTITY_VALUE
+              value: "{{ .Values.env.auth.identityValue}}"
+            # JWT生成token的key值，生成命令：openssl rand -base64 32
+            - name: NACOS_AUTH_TOKEN
+              value: "{{ .Values.env.auth.tokenGenerateKey}}"
+            # 集群模式
+            - name: MODE
+              value: "{{ .Values.env.mode}}"
+            - name: CLUSTER_NODES
+              value: "nacos-cluster-0.{{ .Values.name.service }}.default.svc.cluster.local:8848,nacos-cluster-1.{{ .Values.name.service }}.default.svc.cluster.local:8848"
+            - name: NACOS_SERVERS
+              value: "nacos-cluster-0.{{ .Values.name.service }}.default.svc.cluster.local:8848 nacos-cluster-1.{{ .Values.name.service }}.default.svc.cluster.local:8848"
+            # nacos 数据库配置
+            - name: SPRING_DATASOURCE_PLATFORM
+              value: "{{ .Values.env.datasource}}"
+            - name: MYSQL_SERVICE_HOST
+              value: "{{ .Values.env.mysql.host }}"
+            - name: MYSQL_SERVICE_PORT
+              value: "{{ .Values.env.mysql.port }}"
+            - name: MYSQL_SERVICE_USER
+              value: "{{ .Values.env.mysql.user }}"
+            - name: MYSQL_SERVICE_PASSWORD
+              value: "{{ .Values.env.mysql.password }}"
+            - name: MYSQL_SERVICE_DB_NAME
+              value: "{{ .Values.env.mysql.database }}"
+      imagePullSecrets:
+        - name: {{ .Values.image.imagePullSecret }}
+      volumes:
+        - name: {{ .Values.name.volume}}
+          configMap:
+            name: {{ .Values.name.configMap }}
