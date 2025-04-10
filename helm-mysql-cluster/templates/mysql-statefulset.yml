@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.name.cluster}}  # StatefulSet 的名称，通常是 MySQL 服务的名称
+spec:
+  serviceName: {{ .Values.name.service}}  # 关联的 headless service 名称，用于网络发现
+  replicas: {{ .Values.image.replicas}}  # 设置 Pod 副本数，这里是 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name.container}}  # 用于选择具有 app: mysql 标签的 Pod
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name.container}}  # 为 Pod 添加标签 app: mysql
+    spec:
+      initContainers:
+        - name: {{ .Values.name.initContainer}}  # 初始化容器的名称
+          image: {{ .Values.image.initContainer}}  # 初始化容器的镜像
+          env:
+            - name: MYSQL_SERVER_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name # 使用 Pod 名称作为 MySQL 的 server_id，确保在集群中唯一，由于必须是数字，所以在钩子中提取数字部分，并且写入 my.cnf
+          volumeMounts:
+            - name: {{ .Values.name.volume}}  # 挂载的共享卷名称
+              mountPath: /etc/mysql
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              ID=$(echo $MYSQL_SERVER_ID | sed 's/[^0-9]//g')
+              ID=$((ID + 1))
+              echo "[mysqld]" > /etc/mysql/my.cnf
+              echo "server-id = $ID" >> /etc/mysql/my.cnf
+      containers:
+        - name: {{ .Values.name.container}}  # 容器的名称
+          image: {{ .Values.image.container}}  # MySQL 镜像
+          imagePullPolicy: {{ .Values.image.imagePullPolicy}}  # 如果本地已有镜像则不再拉取
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "{{ .Values.env.password}}"  # MySQL root 用户的密码（生产环境应使用 Secret 管理）
+          ports:
+            - containerPort: {{ .Values.service.port}}  # 容器内部 MySQL 服务的端口
+          volumeMounts:
+            - mountPath: "{{ .Values.pvc.path}}"  # 完整的持久化存储卷（PVC） 挂载到容器中的某个目录
+              name: {{ .Values.name.pvc}}
+            - name: {{ .Values.name.volume}} # 将共享卷 emptyDir 中的特定文件 my.cnf，精确地挂载到容器的 /etc/mysql/my.cnf 配置路径。
+              mountPath: /etc/mysql/my.cnf
+              subPath: my.cnf
+          lifecycle:
+            # 如果是主库，则判断repl的账号是否存在，如果不存在则创建一个名为 repl 的复制账号，并授权它拥有主从同步权限。
+            # 如果是从库，则连接主库，获取主库的 binlog 文件名和位置，并配置为从库，一旦配置完成，MySQL 会自动同步主库的所有写入操作到从库，实时或接近实时。
+            # mysqladmin ping：这是一个 MySQL 管理工具，用来检查 MySQL 服务是否正在运行。
+            # MASTER_STATUS=$(...)：这段命令将 SHOW MASTER STATUS 命令的结果（主节点的二进制日志文件和位置）赋值给 MASTER_STATUS 变量，稍后用于配置从节点的复制。
+            # LOG_FILE=$(...)：将 awk 提取出来的日志文件名赋值给 LOG_FILE 变量。这样，LOG_FILE 就保存了主节点的二进制日志文件的名称。
+            # LOG_POS=$(...)：将 awk 提取出来的日志位置赋值给 LOG_POS 变量。这样，LOG_POS 就保存了主节点的二进制日志的当前位置。
+            # CHANGE MASTER TO ...：主从复制配置的关键部分。它告诉从节点如何连接到主节点，并配置复制所需的参数。
+            # START SLAVE：启动从节点的复制进程。它告诉 MySQL 从节点开始从主节点读取二进制日志，并实时应用主节点上的变更。
+            postStart:
+              exec:
+                command:
+                  - "/bin/sh"
+                  - "-c"
+                  - |
+                    echo "Waiting for mysqld to be ready..."
+                    until mysqladmin ping -u{{ .Values.env.user}} -p{{ .Values.env.password}} --silent; do sleep 2; done
+
+                    if [ $(cat /etc/hostname) = "{{ .Values.name.cluster }}-0" ]; then
+                      echo "Initializing master..."
+                      USER_EXISTS=$(mysql -u{{ .Values.env.user}} -p{{ .Values.env.password}} -e "SELECT COUNT(*) FROM mysql.user WHERE user = '{{ .Values.env.replicationUser}}';" | tail -n 1)
+                      if [ "$USER_EXISTS" -eq 0 ]; then
+                      mysql -u{{ .Values.env.user}} -p{{ .Values.env.password}} -e "CREATE USER '{{ .Values.env.replicationUser}}'@'%' IDENTIFIED WITH mysql_native_password BY '{{ .Values.env.replicationPassword}}'; GRANT REPLICATION SLAVE ON *.* TO '{{ .Values.env.replicationUser}}'@'%'; FLUSH PRIVILEGES;"
+                      else
+                      echo "Replication user '{{ .Values.env.replicationUser}}' already exists, skipping creation."
+                      fi
+                    else
+                      echo "Initializing slave..."
+                      until mysqladmin ping -h {{ .Values.name.cluster }}-0.{{ .Values.name.service }}.default.svc.cluster.local -u{{ .Values.env.user}} -p{{ .Values.env.password}} --silent; do sleep 2; done
+                      MASTER_STATUS=$(mysql -h {{ .Values.name.cluster }}-0.{{ .Values.name.service }}.default.svc.cluster.local -u{{ .Values.env.user}} -p{{ .Values.env.password}} -e 'SHOW MASTER STATUS\G')
+                      LOG_FILE=$(echo "$MASTER_STATUS" | grep File | awk '{print $2}')
+                      LOG_POS=$(echo "$MASTER_STATUS" | grep Position | awk '{print $2}')
+                      mysql -u{{ .Values.env.user}} -p{{ .Values.env.password}} -e "STOP SLAVE;"
+                      mysql -u{{ .Values.env.user}} -p{{ .Values.env.password}} -e "CHANGE MASTER TO MASTER_HOST='{{ .Values.name.cluster }}-0.{{ .Values.name.service }}.default.svc.cluster.local', MASTER_USER='{{ .Values.env.replicationUser}}', MASTER_PASSWORD='{{ .Values.env.replicationPassword}}', MASTER_LOG_FILE='$LOG_FILE', MASTER_LOG_POS=$LOG_POS; START SLAVE;"
+                    fi
+      imagePullSecrets:
+        - name: {{ .Values.image.imagePullSecret}} # 如果需要从私有镜像仓库拉取镜像，指定镜像仓库的 Secret
+      volumes:
+        - name: {{ .Values.name.volume}} # 创建一个临时的空目录（empty dir）作为 volume。每次 Pod 启动时，这个目录都是空的。生命周期 跟随 Pod —— 也就是说 Pod 一旦被删除，这个目录里的数据就没有了。
+          emptyDir: { }
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ .Values.name.pvc}}  # PVC 的名称，StatefulSet 会为每个 Pod 自动创建与此名称相关的 PVC
+      spec:
+        accessModes:
+          - {{ .Values.pvc.accessModes}}  # 在集群模式下，每个副本的 PVC 仍然需要保持 ReadWriteOnce，因为每个 MySQL Pod 只能有一个副本对 PVC 进行写操作。其他副本会是只读的。
+        resources:
+          requests:
+            storage: {{ .Values.pvc.storage}}  # 为每个 Pod 分配 1Gi 存储
+        storageClassName: {{ .Values.name.storageClass}}  # 使用自定义的，回收策略为保留的storageClass

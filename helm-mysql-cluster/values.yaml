@@ -1,0 +1,49 @@
+service:
+  type: ClusterIP
+  port: 3306
+
+ingress:
+  enabled: false
+
+name:
+  container: mysql
+  initContainer: init-mysql-config
+  service: mysql-service
+  cluster: mysql-cluster
+
+  # 与 volumeMounts 中的 name 一致
+  volume: config-volume
+  configMap:
+
+  # 与 volumeMounts 中的 name 一致
+  pvc: mysql-storage
+  storageClass: retain-storage-class
+
+image:
+  container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/mysql:8.0
+  initContainer: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/alpine:latest
+  imagePullPolicy: IfNotPresent
+  replicas: 2
+  imagePullSecret: my-registry-secret
+
+ConfigMap:
+  fileName:
+  filePath:
+
+pvc:
+  storage: 1Gi
+  accessModes: ReadWriteOnce
+  path: /var/lib/mysql
+
+storageClass:
+  provisioner: k8s.io/minikube-hostpath
+  reclaimPolicy: Retain
+  volumeBindingMode: Immediate
+
+
+# 自定义配置
+env:
+  user: root # MySQL root 用户名
+  password: zxj201328  # MySQL root 用户的密码
+  replicationUser: repl # 主从复制用户，为了更好的安全性，不建议使用root账号
+  replicationPassword: repl_zxj201328 # 主从复制用户密码
