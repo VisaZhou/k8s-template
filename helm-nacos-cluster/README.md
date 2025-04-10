@@ -36,7 +36,7 @@ spring:
         password: nacos
 ```
 
-k8s环境配置不用修改
+k8s环境配置不用修改,会自动注册到集群中。
 ```yml
 spring:
   cloud:

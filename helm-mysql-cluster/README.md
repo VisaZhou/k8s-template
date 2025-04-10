@@ -99,6 +99,9 @@ statefulset.yml
                     fi
 ```
 ## 注意
-1. volumeClaimTemplates 不需要修改，但是在从单机转为集群时需要删除旧的pvc。
-2. 主从复制设置好后，如果从机复制有报错，将会自动调用STOP SLAVE命令停止复制，需要手动解决掉错误部分，然后执行START SLAVE命令重新开始复制。
+volumeClaimTemplates 不需要修改，但是在从单机转为集群时需要删除旧的pvc。
+
+主从复制设置好后，如果从机复制有报错，将会自动调用STOP SLAVE命令停止复制，需要手动解决掉错误部分，然后执行START SLAVE命令重新开始复制。
+
+主从复制设置好后，读写分离依靠ShardingSphere来实现。
 
