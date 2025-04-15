@@ -26,7 +26,7 @@ spec:
                 sleep 2;
               done;
               echo "MySQL 已就绪，开始初始化数据库...";
-              mysql -h {{ .Values.env.mysql.host }} -P {{ .Values.env.mysql.port }} -u {{ .Values.env.mysql.user }} -p"{{ .Values.env.mysql.password }}" --ssl=0 < {{ .Values.ConfigMap.filePath }};
+              mariadb -h {{ .Values.env.mysql.host }} -P {{ .Values.env.mysql.port }} -u {{ .Values.env.mysql.user }} -p"{{ .Values.env.mysql.password }}" --ssl=0 < {{ .Values.ConfigMap.filePath }};
               echo "数据库初始化完成，退出 initContainer";
           volumeMounts:
             - name: {{ .Values.name.volume}} # 名称与volumes中的名称一致

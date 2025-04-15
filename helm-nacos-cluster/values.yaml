@@ -50,7 +50,7 @@ env:
     identityValue: visage_auth_value
   datasource: mysql
   mysql:
-    host: mysql-service.default.svc.cluster.local  # MySQL 服务的地址
+    host: mysql-cluster-0.mysql-service.default.svc.cluster.local  # MySQL 服务的地址
     port: 3306  # MySQL 服务的端口
     user: root  # MySQL 用户名
     password: zxj201328  # MySQL 密码
