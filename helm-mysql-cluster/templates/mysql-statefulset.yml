@@ -64,7 +64,7 @@ spec:
                   - |
                     echo "Waiting for mysqld to be ready..."
                     until mysqladmin ping -u{{ .Values.env.user}} -p{{ .Values.env.password}} --silent; do sleep 2; done
-                    mysql -u{{ .Values.env.user }} -p{{ .Values.env.password }} -e "ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '{{ .Values.env.password }}'; FLUSH PRIVILEGES;"
+                    mysql -u{{ .Values.env.user }} -p{{ .Values.env.password }} -e "ALTER USER '{{ .Values.env.user}}'@'%' IDENTIFIED WITH mysql_native_password BY '{{ .Values.env.password }}'; FLUSH PRIVILEGES;"
 
                     if [ $(cat /etc/hostname) = "{{ .Values.name.cluster }}-0" ]; then
                       echo "Initializing master..."
