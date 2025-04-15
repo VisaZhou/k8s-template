@@ -20,7 +20,7 @@ name:
   storageClass:
 
 image:
-  container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/backend-boot-template:0.0.4
+  container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/backend-boot-template:0.0.5
   initContainer: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/mysql-client:8.0
   imagePullPolicy: Always
   replicas: 2
@@ -45,7 +45,7 @@ storageClass:
 env:
   profile: prod
   mysql:
-    host: mysql-service.default.svc.cluster.local  # MySQL 服务的地址
+    host: mysql-cluster-0.mysql-service.default.svc.cluster.local  # MySQL 服务的地址,显式的指定主库
     port: 3306  # MySQL 服务的端口
     user: root  # MySQL 用户名
     password: zxj201328  # MySQL 密码
