@@ -12,8 +12,8 @@ name:
   cluster: redis-cluster
 
   # 与 volumeMounts 中的 name 一致
-  volume:
-  configMap:
+  volume: redis-volume
+  configMap: redis-config
 
   # 与 volumeMounts 中的 name 一致
   pvc: redis-storage
@@ -27,8 +27,8 @@ image:
   imagePullSecret: my-registry-secret
 
 ConfigMap:
-  fileName:
-  filePath:
+  fileName: redis.conf
+  filePath: /usr/local/etc/redis/redis.conf
 
 pvc:
   storage: 500Mi
@@ -44,7 +44,7 @@ storageClass:
 # 自定义配置
 env:
   password: zxj201328  # redis 密码
-  cluster_enabled: no  # 是否启用集群模式
+  cluster_enabled: "no"  # 是否启用集群模式
   log_level: notice  # 设置 Redis 日志的级别（如：debug, verbose, notice, warning）。
   max_memory: 256mb  # 设置 Redis 的最大内存使用量
   max_clients: 100 # 设置 Redis 允许的最大客户端连接数
@@ -53,7 +53,7 @@ env:
   #	每 5 分钟内至少有 10 次写操作；
   #	每 1 分钟内至少有 10000 次写操作。
   rdb_save_interval: 900 1 300 10 60 10000
-  aof_enabled: yes  # 是否启用 AOF（追加文件）持久化
+  aof_enabled: "yes"  # 是否启用 AOF（追加文件）持久化
   # 设置 AOF 文件的同步策略,可选值有：
   #	always：每次写操作后都同步到磁盘（性能较差，但数据安全性高）；
   #	everysec：每秒同步一次（性能和数据安全性之间的折中）；

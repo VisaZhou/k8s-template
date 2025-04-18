@@ -17,34 +17,22 @@ spec:
         - name: {{ .Values.name.container}}  # 容器的名称
           image: {{ .Values.image.container}}  # Redis 镜像
           imagePullPolicy: {{ .Values.image.imagePullPolicy}}  # 如果本地已有镜像则不再拉取
-          env:
-            - name: REDIS_PASSWORD
-              value: "{{ .Values.env.password}}"  # redis 密码
-            - name: REDIS_CLUSTER_ENABLED
-              value: "{{ .Values.env.cluster_enabled}}"  # 是否启用集群模式
-            - name: REDIS_LOG_LEVEL
-              value: "{{ .Values.env.log_level}}"  # 设置 Redis 日志的级别
-            - name: REDIS_MAXMEMORY
-              value: "{{ .Values.env.max_memory}}"  # 设置 Redis 的最大内存使用量
-            - name: REDIS_MAXCLIENTS
-              value: "{{ .Values.env.max_clients}}"  # 设置 Redis 允许的最大客户端连接数
-            - name: REDIS_SAVE_INTERVALS
-              value: "{{ .Values.env.rdb_save_interval}}"  # 设置 RDB 快照的保存间隔
-            - name: REDIS_APPENDONLY
-              value: "{{ .Values.env.aof_enabled}}"  # 是否启用 AOF 持久化
-            - name: REDIS_AOF_FSYNC
-              value: "{{ .Values.env.aof_fsync}}"  # 设置 AOF 文件的同步策略
-            - name: REDIS_PORT
-              value: "{{ .Values.service.port}}"  # Redis 服务的端口
-            - name: REDIS_DATA_DIR
-              value: "{{ .Values.pvc.path}}"  # Redis 数据存储路径
           ports:
             - containerPort: {{ .Values.service.port}}  # 容器内部 Redis 服务的端口
+          command: ["redis-server"]
+          args: ["{{ .Values.ConfigMap.filePath }}"] # 与 command 一起使用为容器启动命令，相当于在命令行中执行 redis-server /usr/local/etc/redis/redis.conf
           volumeMounts:
             - mountPath: "{{ .Values.pvc.path}}"  # 容器内数据存储路径，Redis 数据库默认存储位置
               name: {{ .Values.name.pvc}}  # 关联 volume 的名称（必须与 volumeClaimTemplates 中的名称一致）
+            - name: {{ .Values.name.volume}}  # 卷的名称
+              mountPath: {{ .Values.ConfigMap.filePath}}  # 容器内配置文件的路径
+              subPath: {{ .Values.ConfigMap.fileName}}  # 容器内配置文件的名称
       imagePullSecrets:
         - name: {{ .Values.image.imagePullSecret}} # 如果需要从私有镜像仓库拉取镜像，指定镜像仓库的 Secret
+      volumes:
+        - name: {{ .Values.name.volume}}  # 卷的名称
+          configMap:
+            name: {{ .Values.name.configMap }}
   volumeClaimTemplates:
     - metadata:
         name: {{ .Values.name.pvc}}  # PVC 的名称，StatefulSet 会为每个 Pod 自动创建与此名称相关的 PVC
