@@ -94,10 +94,13 @@ ls
 ```
 
 ### 恢复AOF
-和 RDB 一样，AOF 文件的恢复是 Redis 启动时自动完成的，前提是：
+和 RDB 一样，AOF 文件的恢复是 Redis 启动时自动完成的，前提是 appendonly yes 已启用
 
-appendonly yes 已启用
+redis 优先会使用 AOF 文件恢复
 
-appendfilename 配置的 AOF 文件存在（默认 appendonly.aof）
+因为：AOF 日志记录得更完整、最新。除非 AOF 被禁用，或者 AOF 文件损坏，才会用 RDB 恢复
 
-dir 路径正确
+这由配置项决定：
+```yml
+appendonly yes
+```
