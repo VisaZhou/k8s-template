@@ -1,0 +1,7 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Values.name.storageClass}}  # 自定义 StorageClass 的名称
+provisioner: {{ .Values.storageClass.provisioner}}  # Minikube 本地存储供应器
+reclaimPolicy: {{ .Values.storageClass.reclaimPolicy}}  # 设置回收策略为 Retain
+volumeBindingMode: {{ .Values.storageClass.volumeBindingMode}}  # 立即绑定存储卷

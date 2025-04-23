@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name.configMap }}
+data:
+  # requirepass Redis 密码
+  # cluster-enabled 是否启用集群模式
+  # cluster-config-file 设置集群配置文件的名称,文件由 Redis 自己生成、维护,这个文件会保存在 dir 目录下。
+  # masterauth 主从复制密码
+  # cluster-node-timeout 设置集群节点超时时间（单位：毫秒）
+  # loglevel 设置 Redis 日志的级别
+  # maxmemory 设置 Redis 的最大内存使用量
+  # maxclients 设置 Redis 允许的最大客户端连接数
+  # save 设置 RDB 快照的保存间隔
+  # appendonly 是否启用 AOF 持久化
+  # appendfsync 设置 AOF 文件的同步策略
+  # port Redis 服务的端口
+  # dir Redis 数据存储路径
+  redis.conf: |
+    requirepass {{ .Values.env.password }}
+    cluster-enabled {{ .Values.env.cluster_enabled }}
+    cluster-config-file {{ .Values.env.cluster_config_file }}
+    masterauth {{ .Values.env.password }}
+    cluster-node-timeout {{ .Values.env.cluster_node_timeout }}
+    loglevel {{ .Values.env.log_level }}
+    maxmemory {{ .Values.env.max_memory }}
+    maxclients {{ .Values.env.max_clients }}
+    save {{ .Values.env.rdb_save_interval }}
+    appendonly {{ .Values.env.aof_enabled }}
+    appendfsync {{ .Values.env.aof_fsync }}
+    port {{ .Values.service.port }}
+    dir {{ .Values.pvc.path }}

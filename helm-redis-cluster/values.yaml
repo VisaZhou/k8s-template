@@ -1,0 +1,63 @@
+service:
+  type: ClusterIP
+  port: 6379
+
+ingress:
+  enabled: false
+
+name:
+  container: redis
+  initContainer:
+  service: redis-service
+  cluster: redis-cluster
+
+  # 与 volumeMounts 中的 name 一致
+  volume: redis-volume
+  configMap: redis-config
+
+  # 与 volumeMounts 中的 name 一致
+  pvc: redis-storage
+  storageClass: redis-storage-class
+
+image:
+  container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/redis:7.4.2
+  initContainer:
+  imagePullPolicy: IfNotPresent
+  replicas: 6
+  imagePullSecret: my-registry-secret
+
+ConfigMap:
+  fileName: redis.conf
+  filePath: /usr/local/etc/redis/redis.conf
+
+pvc:
+  storage: 100Mi
+  accessModes: ReadWriteOnce
+  path: /var/lib/redis
+
+storageClass:
+  provisioner: k8s.io/minikube-hostpath
+  reclaimPolicy: Retain
+  volumeBindingMode: Immediate
+
+
+# 自定义配置
+env:
+  password: zxj201328  # redis 密码
+  cluster_enabled: "yes"  # 是否启用集群模式
+  cluster_config_file: nodes.conf # 设置集群配置文件的名称,文件由 Redis 自己生成、维护,这个文件会保存在 dir 目录下。
+  cluster_node_timeout: 5000 # 设置集群节点超时时间（单位：毫秒）
+  log_level: notice  # 设置 Redis 日志的级别（如：debug, verbose, notice, warning）。
+  max_memory: 256mb  # 设置 Redis 的最大内存使用量
+  max_clients: 100 # 设置 Redis 允许的最大客户端连接数
+  # 这个配置表示 Redis 会根据以下条件之一来触发 RDB 快照：
+  #	每 15 分钟内至少有 1 次写操作；
+  #	每 5 分钟内至少有 10 次写操作；
+  #	每 1 分钟内至少有 10000 次写操作。
+  rdb_save_interval: 900 1 300 10 60 10000
+  aof_enabled: "yes"  # 是否启用 AOF（追加文件）持久化
+  # 设置 AOF 文件的同步策略,可选值有：
+  #	always：每次写操作后都同步到磁盘（性能较差，但数据安全性高）；
+  #	everysec：每秒同步一次（性能和数据安全性之间的折中）；
+  #	no：不进行同步（性能最好，但数据安全性最低）。
+  aof_fsync: everysec

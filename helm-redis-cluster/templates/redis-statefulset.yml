@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.name.cluster}}  # StatefulSet 的名称，通常是 Redis 服务的名称
+spec:
+  serviceName: {{ .Values.name.service}}  # 关联的 headless service 名称，用于网络发现
+  replicas: {{ .Values.image.replicas}}  # 设置 Pod 副本数，这里是 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name.container}}  # 用于选择具有 app: Redis 标签的 Pod
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name.container}}  # 为 Pod 添加标签 app: Redis
+    spec:
+      containers:
+        - name: {{ .Values.name.container}}  # 容器的名称
+          image: {{ .Values.image.container}}  # Redis 镜像
+          imagePullPolicy: {{ .Values.image.imagePullPolicy}}  # 如果本地已有镜像则不再拉取
+          ports:
+            - containerPort: {{ .Values.service.port}}  # 容器内部 Redis 服务的端口
+            - containerPort: {{ add .Values.service.port 10000 }} #  容器内部 Redis 集群节点间通信的端口：16379
+          command: ["redis-server"]
+          args: ["{{ .Values.ConfigMap.filePath }}"] # 与 command 一起使用为容器启动命令，相当于在命令行中执行 redis-server /usr/local/etc/redis/redis.conf
+          volumeMounts:
+            - mountPath: "{{ .Values.pvc.path}}"  # 容器内数据存储路径，Redis 数据库默认存储位置
+              name: {{ .Values.name.pvc}}  # 关联 volume 的名称（必须与 volumeClaimTemplates 中的名称一致）
+            - name: {{ .Values.name.volume}}  # 卷的名称
+              mountPath: {{ .Values.ConfigMap.filePath}}  # 容器内配置文件的路径
+              subPath: {{ .Values.ConfigMap.fileName}}  # 容器内配置文件的名称
+      imagePullSecrets:
+        - name: {{ .Values.image.imagePullSecret}} # 如果需要从私有镜像仓库拉取镜像，指定镜像仓库的 Secret
+      volumes:
+        - name: {{ .Values.name.volume}}  # 卷的名称
+          configMap:
+            name: {{ .Values.name.configMap }}
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ .Values.name.pvc}}  # PVC 的名称，StatefulSet 会为每个 Pod 自动创建与此名称相关的 PVC
+      spec:
+        accessModes:
+          - {{ .Values.pvc.accessModes}}  # 数据只能由一个 Pod 读写
+        resources:
+          requests:
+            storage: {{ .Values.pvc.storage}}  # 为每个 Pod 分配 存储
+        storageClassName: {{ .Values.name.storageClass}}  # 使用自定义的，回收策略为保留的storageClass

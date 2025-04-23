@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-init
+spec:
+  backoffLimit: 0 # 设置 restartPolicy: Never 后，k8s 不会重启当前容器，但是 Job 会创建新的容器执行完当前任务，可使用 backoffLimit 设置重试次数
+  template:
+    spec:
+      serviceAccountName: redis-cluster-job-sa   #  绑定 ServiceAccount
+      containers:
+        - name: redis-job
+          image: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/k8s-redis-client:1.0
+          imagePullPolicy: {{ .Values.image.imagePullPolicy}}  # 如果本地已有镜像则不再拉取
+          command: ["/bin/sh", "-c"]
+          # 等待所有 redis-cluster-x 节点 Running后执行创建集群命令
+          args:
+            - |
+              while true; do
+                READY_COUNT=$(kubectl get pods | grep 'redis-cluster-' | grep 'Running' | wc -l)
+                if [ "$READY_COUNT" -ge 6 ]; then
+                  echo "所有节点已就绪，开始创建集群"
+                  break
+                fi
+                echo "等待 Redis 节点就绪..."
+                sleep 5
+              done
+
+              redis-cli --cluster create \
+              redis-cluster-0.redis-service.default.svc.cluster.local:6379 \
+              redis-cluster-1.redis-service.default.svc.cluster.local:6379 \
+              redis-cluster-2.redis-service.default.svc.cluster.local:6379 \
+              redis-cluster-3.redis-service.default.svc.cluster.local:6379 \
+              redis-cluster-4.redis-service.default.svc.cluster.local:6379 \
+              redis-cluster-5.redis-service.default.svc.cluster.local:6379 \
+              --cluster-replicas 1 -a zxj201328 --cluster-yes
+      restartPolicy: Never # 脚本跑完或失败后，k8s 不再重启当前容器
+      imagePullSecrets:
+        - name: {{ .Values.image.imagePullSecret}} # 如果需要从私有镜像仓库拉取镜像，指定镜像仓库的 Secret
