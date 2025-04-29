@@ -1,3 +1,9 @@
+## 支持
+目前的 cluster 模式支持master之间的集群。 slave只用于备份主节点数据，当主节点宕机时，slave会自动升级为主节点来提供服务。 客户端会被redirect到新的主节点。
+
+该 helm 配置为自动分配主从，自动分配槽位，不适用于持久化 Redis 数据的场景。 因为重启所有节点会重新分配槽位和主从，而从 pvc 中恢复数据时，槽位和主从关系会不一致。 而且 k8s 中的 IP 地址是动态分配的，重启后 IP 地址会发生变化，node.conf 中的 IP 地址也会发生变化，因此会导致集群无法正常工作。
+
+因此需要去除掉 pvc 的挂载。如果需要持久化数据，使用单机版 Redis 模式。
 ## 架构
 
 Redis Cluster 至少需要 3 个 master + 每个 master 至少一个 replica，也就是说：最少需要 6 个节点（3主3从），否则会报错。
@@ -32,6 +38,25 @@ replicas: 6
 ports:
     - containerPort: {{ .Values.service.port}}  # 容器内部 Redis 服务的端口
     - containerPort: {{ add .Values.service.port 10000 }} #  容器内部 Redis 集群节点间通信的端口：16379
+```
+
+去除掉 pvc 的挂载，去除以下内容：
+```yml
+
+    volumeMounts:
+      - mountPath: {{ .Values.pvc.path}}
+        name: {{ .Values.name.pvc}}  
+    
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ .Values.name.pvc}}  
+      spec:
+        accessModes:
+          - {{ .Values.pvc.accessModes}} 
+        resources:
+          requests:
+            storage: {{ .Values.pvc.storage}}
+        storageClassName: {{ .Values.name.storageClass}}
 ```
 
 ### 2. redis-service.yaml
@@ -164,6 +189,70 @@ spec:
       imagePullSecrets:
         - name: my-registry-secret # 如果需要从私有镜像仓库拉取镜像，指定镜像仓库的 Secret
 ```
+
+### java 客户端连接集群
+开发环境
+
+转发所有端口到本地进行连接会失败，因为 Redis Cluster 节点间的跳转依靠的是 nodes.conf 中的内网 IP 地址。
+
+所以本地连接改为使用 Jedis + 自构建的 helm-redis-proxy 取代 lettuce,使用 proxy 连接集群，proxy 会自动处理集群的路由问题。
+
+注意：关闭 redis 健康检查，因为 redis-cluster-proxy 不支持 info 命令，所以开发环境下需要关闭 redis 健康检查。
+```xml
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+```
+```yml
+  # 由于开发环境端口策略问题，需要使用 redis-cluster-proxy 代理来实现 redis 连接。
+  data:
+    redis: # 由于 redis-cluster-proxy 中设置了密码，所以不需要在这里设置密码，集群模式下也不需要设置database
+      host: localhost
+      port: 7777
+      timeout: 3000
+      client-type: jedis  # 明确使用 Jedis 客户端，支持redis-cluster-proxy
+      jedis:
+        pool:
+          max-active: 8         # 最大连接数
+          max-wait: -1ms        # 最大等待时间（-1 表示无限等待）
+          min-idle: 0           # 最小空闲连接数
+          max-idle: 8           # 最大空闲连接数
+
+management:
+  health:
+    redis:
+      enabled: false # 由于 redis-cluster-proxy 不支持 info 命令，所以开发环境下需要关闭 redis 健康检查
+```
+
+k8s内网环境
+
+可以直接使用 lettuce 进行连接。
+```yml
+  data:
+    redis:
+      # 这里配置 Redis 集群的节点，Lettuce 会自动进行集群管理
+      cluster:
+        nodes:
+          - redis-cluster-0.redis-service.default.svc.cluster.local:6379
+          - redis-cluster-1.redis-service.default.svc.cluster.local:6379
+          - redis-cluster-2.redis-service.default.svc.cluster.local:6379
+          - redis-cluster-3.redis-service.default.svc.cluster.local:6379
+          - redis-cluster-4.redis-service.default.svc.cluster.local:6379
+          - redis-cluster-5.redis-service.default.svc.cluster.local:6379
+        max-redirects: 5   # Redis 集群中重定向的最大次数，类似于使用 -c 参数的效果
+      password: zxj201328
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 8  # 连接池最大连接数
+          max-wait: -1ms  # 连接池最大阻塞等待时间（使用负值表示没有限制）
+          min-idle: 0  # 连接池中的最小空闲连接
+          max-idle: 8  # 连接池中的最大空闲连接
+```
+
 
 ## 命令
 ### 集群连接

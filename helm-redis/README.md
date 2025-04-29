@@ -1,3 +1,21 @@
+## 客户端连接
+单机版使用 lettuce 连接，集群版使用 jedis + 自构建的 helm-redis-proxy 连接。
+```yml
+  data:
+    redis:
+      host: redis-service.default.svc.cluster.local
+      port: 6379
+      password: zxj201328
+      database: 0
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 8 # 连接池最大连接数
+          max-wait: -1ms  # 连接池最大阻塞等待时间（使用负值表示没有限制）
+          min-idle: 0 # 连接池中的最小空闲连接
+          max-idle: 8 # 连接池中的最大空闲连接
+```
+
 ## RDB
 ### 验证配置是否成功
 获取rdb的触发条件，与configmap中的配置一致：

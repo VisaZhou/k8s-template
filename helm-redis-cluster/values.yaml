@@ -16,8 +16,8 @@ name:
   configMap: redis-config
 
   # 与 volumeMounts 中的 name 一致
-  pvc: redis-storage
-  storageClass: redis-storage-class
+  pvc:
+  storageClass:
 
 image:
   container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/redis:7.4.2
@@ -31,9 +31,9 @@ ConfigMap:
   filePath: /usr/local/etc/redis/redis.conf
 
 pvc:
-  storage: 100Mi
-  accessModes: ReadWriteOnce
-  path: /var/lib/redis
+  storage:
+  accessModes:
+  path:
 
 storageClass:
   provisioner: k8s.io/minikube-hostpath
@@ -49,7 +49,7 @@ env:
   cluster_node_timeout: 5000 # 设置集群节点超时时间（单位：毫秒）
   log_level: notice  # 设置 Redis 日志的级别（如：debug, verbose, notice, warning）。
   max_memory: 256mb  # 设置 Redis 的最大内存使用量
-  max_clients: 100 # 设置 Redis 允许的最大客户端连接数
+  max_clients: 10000 # 设置 Redis 允许的最大客户端连接数
   # 这个配置表示 Redis 会根据以下条件之一来触发 RDB 快照：
   #	每 15 分钟内至少有 1 次写操作；
   #	每 5 分钟内至少有 10 次写操作；

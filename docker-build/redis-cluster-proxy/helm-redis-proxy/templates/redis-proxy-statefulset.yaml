@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-proxy
+  labels:
+    app: redis-proxy
+spec:
+  serviceName: redis-proxy-headless # StatefulSet 需要配合 Headless Service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-proxy
+  template:
+    metadata:
+      labels:
+        app: redis-proxy
+    spec:
+      containers:
+        - name: redis-proxy
+          image: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/redis-cluster-proxy:1.0
+          args:
+            - "--auth"
+            - "zxj201328"
+            - "redis-cluster-0.redis-service.default.svc.cluster.local:6379,"
+            - "redis-cluster-1.redis-service.default.svc.cluster.local:6379,"
+            - "redis-cluster-2.redis-service.default.svc.cluster.local:6379,"
+            - "redis-cluster-3.redis-service.default.svc.cluster.local:6379,"
+            - "redis-cluster-4.redis-service.default.svc.cluster.local:6379,"
+            - "redis-cluster-5.redis-service.default.svc.cluster.local:6379"
+          ports:
+            - containerPort: 7777
+      imagePullSecrets:
+        - name: my-registry-secret
+
+---
+# Headless Service：支持 StatefulSet 的稳定 DNS
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-proxy-headless
+  labels:
+    app: redis-proxy
+spec:
+  clusterIP: None
+  selector:
+    app: redis-proxy
+  ports:
+    - name: redis-proxy-port
+      port: 7777
+      targetPort: 7777

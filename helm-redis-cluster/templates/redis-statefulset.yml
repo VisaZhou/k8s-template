@@ -23,8 +23,6 @@ spec:
           command: ["redis-server"]
           args: ["{{ .Values.ConfigMap.filePath }}"] # 与 command 一起使用为容器启动命令，相当于在命令行中执行 redis-server /usr/local/etc/redis/redis.conf
           volumeMounts:
-            - mountPath: "{{ .Values.pvc.path}}"  # 容器内数据存储路径，Redis 数据库默认存储位置
-              name: {{ .Values.name.pvc}}  # 关联 volume 的名称（必须与 volumeClaimTemplates 中的名称一致）
             - name: {{ .Values.name.volume}}  # 卷的名称
               mountPath: {{ .Values.ConfigMap.filePath}}  # 容器内配置文件的路径
               subPath: {{ .Values.ConfigMap.fileName}}  # 容器内配置文件的名称
@@ -34,13 +32,3 @@ spec:
         - name: {{ .Values.name.volume}}  # 卷的名称
           configMap:
             name: {{ .Values.name.configMap }}
-  volumeClaimTemplates:
-    - metadata:
-        name: {{ .Values.name.pvc}}  # PVC 的名称，StatefulSet 会为每个 Pod 自动创建与此名称相关的 PVC
-      spec:
-        accessModes:
-          - {{ .Values.pvc.accessModes}}  # 数据只能由一个 Pod 读写
-        resources:
-          requests:
-            storage: {{ .Values.pvc.storage}}  # 为每个 Pod 分配 存储
-        storageClassName: {{ .Values.name.storageClass}}  # 使用自定义的，回收策略为保留的storageClass
