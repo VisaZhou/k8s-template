@@ -1,0 +1,46 @@
+version: '1.0'
+
+services:
+  loki:
+    image: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/loki:2.9.4
+    container_name: loki
+    ports:
+      - "3100:3100"
+      - "9095:9095"  # 添加gRPC端口映射
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - ./loki/wal:/wal              # WAL目录
+      - ./loki/chunks:/loki/chunks    # 块存储
+      - ./loki/cache:/loki/cache      # 缓存
+      - ./loki/index:/loki/index      # 索引
+      - ./loki/compactor:/loki/compactor  # 新增compactor目录
+      - ./loki/rules:/loki/rules      # 新增规则目录
+    restart: unless-stopped
+    networks:
+      - loki-net
+
+  grafana:
+    image: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/grafana-oss:10.3.3
+    container_name: grafana
+    ports:
+      - "3200:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=phis
+      - GF_SECURITY_ADMIN_PASSWORD=giga@163.com
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks:
+      - loki-net
+
+volumes:
+  grafana-storage:
+
+networks:
+  loki-net:
+    driver: bridge
