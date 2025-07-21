@@ -49,7 +49,7 @@ http://192.168.1.9:3100/loki/api/v1/query?query={job="my-nginx"}
 账号密码：`phis/giga@163.com`
 
 在 Grafana 中，点击左侧菜单 --> 点击 Plugins and data --> 点击 Plugins --> 搜索 Loki 并安装 -->
-点击 Add new data source --> 选择 Loki --> 填写 URL 为 `http://192.168.1.9:3100` --> 点击 Save & Test
+点击 Add new data source --> 选择 Loki --> 填写 URL 为 `http://192.168.1.9:3100(根据内网实际ip修改)` --> 点击 Save & Test
 
 ### Grafana 查看日志
 在 Grafana 中，点击左侧菜单 --> Explore --> 选择 Loki 数据源 --> 输入查询语句 `{job="my-nginx"}` --> 点击 Run Query
