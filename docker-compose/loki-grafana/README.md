@@ -53,3 +53,52 @@ http://192.168.1.9:3100/loki/api/v1/query?query={job="my-nginx"}
 
 ### Grafana 查看日志
 在 Grafana 中，点击左侧菜单 --> Explore --> 选择 Loki 数据源 --> 输入查询语句 `{job="my-nginx"}` --> 点击 Run Query
+
+### `loki-docker-driver` 由于插件托管在国外，本地挂代理可以安装，但是在服务器上没有代理,处理情况如下：
+
+1.使用 docker:24.0-dind (带有完整 Docker 的镜像)
+```bash
+# 拉取 docker:24.0-dind 镜像
+docker pull crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/docker:24.0-dind
+
+# 运行 docker:24.0-dind，并进入容器的交互式 shell
+docker run -it --rm \
+  --name docker-image \
+  --privileged \
+  --network host \
+  -e DOCKER_HOST=unix:///var/run/docker.sock \
+  crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/docker:24.0-dind \
+  sh
+
+# 在容器内安装 loki-docker-driver 插件,如果安装不成功但是下载成功了也没关系，可以在容器内复制插件到宿主机上
+dockerd &
+sleep 5 
+docker plugin install grafana/loki-docker-driver:latest --alias loki-driver --grant-all-permissions
+```
+2.找到插件在容器内的路径
+```bash
+cd /var/lib/docker/plugins
+ls
+```
+
+3.复制插件到宿主机
+```bash
+docker cp docker-image:/var/lib/docker/plugins/7a0e275e5a78062bd3898ffdc8bbc53e02f2d62fdc118af6123351f736c993a7 ./docker-compose/loki-grafana/plugin
+```
+
+4.复制插件到服务器
+```bash
+rsync -a -e ssh -i ./docker-compose/loki-grafana/plugin/7a0e275e5a78062bd3898ffdc8bbc53e02f2d62fdc118af6123351f736c993a7 root@1.95.48.134:/var/lib/docker/plugins/
+```
+
+5.重启服务器docker，并启动插件
+```bash
+systemctl restart docker
+docker plugin enable loki-driver:latest
+```
+
+### 放弃 `loki-docker-driver` 插件，使用 `fluentd` 采集日志
+`fluentd` 部署方式
+1. 同样需要安装 `loki` 和 `grafana`，可以参考上面的步骤。
+2. Dockerfile 打包对应硬件架构的 `fluentd-with-loki` 镜像。
+3. 在各个采集端部署 `fluentd`，配置 `fluentd` 采集日志并发送到 `loki`。
