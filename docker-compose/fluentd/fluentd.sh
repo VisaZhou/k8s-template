@@ -7,9 +7,6 @@ docker run -d \
   crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/fluentd-with-loki:latest
 
 # 各服务容器运行时加载插件
-# --log-driver=fluentd \
-# --log-opt fluentd-address=127.0.0.1:24224 \
-# --log-opt tag="phis-message.log" \
 docker run -itd \
   --net=host \
   --name phis-message \
