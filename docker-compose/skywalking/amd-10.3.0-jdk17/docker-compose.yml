@@ -1,0 +1,105 @@
+version: '3.8'
+services:
+  elasticsearch:
+    profiles:
+      - "elasticsearch"
+    image: ${ELASTICSEARCH_IMAGE:-docker.elastic.co/elasticsearch/elasticsearch-oss:7.4.2}
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+    networks:
+      - skywalking
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+  banyandb:
+    profiles:
+      - "banyandb"
+    image: ${BANYANDB_IMAGE:-ghcr.io/apache/skywalking-banyandb:a091ac0c3efa7305288ae9fb8853bffb2186583a}
+    container_name: banyandb
+    networks:
+      - skywalking
+    expose:
+      - 17912
+    ports:
+      - 17913:17913
+    command: standalone --stream-root-path /tmp/stream-data --measure-root-path /tmp/measure-data
+    healthcheck:
+      test: [ "CMD", "sh", "-c", "nc -nz 127.0.0.1 17912" ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+
+  # 服务模板,定义锚点 oap-base, 使用 profiles: [ "none" ] 防止被自动拉起
+  oap-base: &oap-base
+    profiles: [ "none" ]
+    image: ${OAP_IMAGE:-ghcr.io/apache/skywalking/oap:latest}
+    ports:
+      - "11800:11800"
+      - "12800:12800"
+    networks:
+      - skywalking
+    healthcheck:
+      test: [ "CMD-SHELL", "curl http://localhost:12800/internal/l7check" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    environment: &oap-env
+      SW_HEALTH_CHECKER: default
+      SW_TELEMETRY: prometheus
+      JAVA_OPTS: "-Xms2048m -Xmx2048m"
+
+  # 继承 oap-base 锚点，指定 profiles 为 elasticsearch 会真实启动
+  oap-es:
+    <<: *oap-base
+    profiles:
+      - "elasticsearch"
+    container_name: oap
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      <<: *oap-env
+      SW_STORAGE: elasticsearch
+      SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
+
+  # 继承 oap-base 锚点，指定 profiles 为 banyandb 会真实启动
+  oap-bdb:
+    <<: *oap-base
+    profiles:
+      - "banyandb"
+    container_name: oap
+    depends_on:
+      banyandb:
+        condition: service_healthy
+    environment:
+      <<: *oap-env
+      SW_STORAGE: banyandb
+      SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
+
+  ui:
+    image: ${UI_IMAGE:-ghcr.io/apache/skywalking/ui:latest}
+    container_name: ui
+    ports:
+      - "10800:8080"
+    networks:
+      - skywalking
+    environment:
+      SW_OAP_ADDRESS: http://oap:12800
+      SW_ZIPKIN_ADDRESS: http://oap:9412
+
+networks:
+  skywalking:
