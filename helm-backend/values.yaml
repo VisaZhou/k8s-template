@@ -21,7 +21,7 @@ name:
 
 image:
   container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/backend-boot-template:0.0.9
-  initContainer: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/mysql-client:8.0
+  initContainer: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-build/mysql-client:8.0
   imagePullPolicy: Always
   replicas: 1
   imagePullSecret: my-registry-secret

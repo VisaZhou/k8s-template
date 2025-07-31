@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: redis-proxy
-          image: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/redis-cluster-proxy:1.0
+          image: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-build/redis-cluster-proxy:1.0
           args:
             - "--auth"
             - "zxj201328"

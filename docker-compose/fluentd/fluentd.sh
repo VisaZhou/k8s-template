@@ -4,7 +4,7 @@ docker run -d \
   --restart=always \
   -p 24224:24224 \
   -v "$(pwd)"/fluent.conf:/fluentd/etc/fluent.conf \
-  crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/fluentd-with-loki:latest
+  crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-build/fluentd-with-loki:latest
 
 # 各服务容器运行时加载插件
 docker run -itd \

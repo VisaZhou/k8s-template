@@ -20,7 +20,7 @@ name:
   storageClass: retain-storage-class
 
 image:
-  container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/mysql:8.0
+  container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/mysql:8.0
   initContainer: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/alpine:latest
   imagePullPolicy: IfNotPresent
   replicas: 2

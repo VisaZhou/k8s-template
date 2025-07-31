@@ -9,7 +9,7 @@ spec:
       serviceAccountName: redis-cluster-job-sa   #  绑定 ServiceAccount
       containers:
         - name: redis-job
-          image: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/k8s-redis-client:1.0
+          image: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-build/k8s-redis-client:1.0
           imagePullPolicy: {{ .Values.image.imagePullPolicy}}  # 如果本地已有镜像则不再拉取
           command: ["/bin/sh", "-c"]
           # 等待所有 redis-cluster-x 节点 Running后执行创建集群命令

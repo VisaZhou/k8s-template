@@ -20,8 +20,8 @@ name:
   storageClass:
 
 image:
-  container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/nacos-server:v2.5.0
-  initContainer: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-arm64/mysql-client:8.0
+  container: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/nacos-server:v2.5.0
+  initContainer: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-build/mysql-client:8.0
   imagePullPolicy: IfNotPresent
   replicas: 2
   imagePullSecret: my-registry-secret
