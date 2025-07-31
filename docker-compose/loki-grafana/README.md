@@ -16,7 +16,7 @@ sh loki-grafana.sh
    
 执行 compose 文件启动服务
 ```bash
-docker-compose -f docker-compose-loki.yml up -d
+docker-compose -f docker-compose.yml up -d
 ```
 
 运行服务并使用loki采集插件,参照 nginx.sh

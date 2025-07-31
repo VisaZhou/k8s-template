@@ -1,0 +1,13 @@
+# Prometheus 每隔 15 秒去采集一次所有目标（target）的指标数据。
+global:
+  scrape_interval: 15s
+
+# 主机级别的监控数据
+scrape_configs:
+  - job_name: "node-exporters"
+    static_configs:
+      - targets:
+          - "172.33.128.21:9100"
+          - "172.33.128.22:9100"
+          - "172.33.128.23:9100"
+          - "172.33.128.24:9100"
