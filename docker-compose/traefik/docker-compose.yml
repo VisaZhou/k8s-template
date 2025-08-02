@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: crpi-iay62pbhw1a58p10.cn-hangzhou.personal.cr.aliyuncs.com/visage-namespace/traefik:3.0
+    container_name: traefik
+    ports:
+      - "38800:38800" # Grafana
+      - "38700:38700" # Skywalking
+      - "38120:38120" # 海南环境
+      - "38110:38110" # 安徽环境
+      - "38600:38600" # Traefik
+    volumes:
+      - ./config.yml:/etc/traefik/traefik.yml:ro
+      - ./dynamic:/etc/traefik/dynamic:ro
+      - ./certs:/etc/traefik/certs:ro
+    restart: unless-stopped

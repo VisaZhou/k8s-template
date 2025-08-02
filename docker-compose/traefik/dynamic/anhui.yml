@@ -1,0 +1,20 @@
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/cert.pem
+      keyFile: /etc/traefik/certs/privkey.pem
+
+http:
+  routers:
+    anhui:
+      entryPoints:
+        - port-38110
+      rule: "Host(`phi.zigin.net`)"
+      service: anhui-web
+      tls: true
+
+  services:
+    anhui-web:
+      loadBalancer:
+        servers:
+          - url: "http://172.33.128.24:38000"
+        passHostHeader: true

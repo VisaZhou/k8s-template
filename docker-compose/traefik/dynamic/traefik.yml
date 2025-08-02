@@ -1,0 +1,13 @@
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/cert.pem
+      keyFile: /etc/traefik/certs/privkey.pem
+
+http:
+  routers:
+    traefik:
+      entryPoints:
+        - port-38600
+      rule: "Host(`phi.zigin.net`)"
+      service: api@internal
+      tls: true

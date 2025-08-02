@@ -1,0 +1,20 @@
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/cert.pem
+      keyFile: /etc/traefik/certs/privkey.pem
+
+http:
+  routers:
+    hainan:
+      entryPoints:
+        - port-38120
+      rule: "Host(`phi.zigin.net`)"
+      service: hainan-web
+      tls: true
+
+  services:
+    hainan-web:
+      loadBalancer:
+        servers:
+          - url: "http://172.33.128.24:38001"
+        passHostHeader: true

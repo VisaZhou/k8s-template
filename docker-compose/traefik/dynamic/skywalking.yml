@@ -1,0 +1,20 @@
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/cert.pem
+      keyFile: /etc/traefik/certs/privkey.pem
+
+http:
+  routers:
+    skywalking:
+      entryPoints:
+        - port-38700
+      rule: "Host(`phi.zigin.net`)"
+      service: skywalking-service
+      tls: true
+
+  services:
+    skywalking-service:
+      loadBalancer:
+        servers:
+          - url: "http://172.33.128.23:10800"
+        passHostHeader: true

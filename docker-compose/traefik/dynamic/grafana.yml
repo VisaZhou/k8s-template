@@ -1,0 +1,20 @@
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/cert.pem
+      keyFile: /etc/traefik/certs/privkey.pem
+
+http:
+  routers:
+    grafana:
+      entryPoints:
+        - port-38800
+      rule: "Host(`phi.zigin.net`)"
+      service: grafana-service
+      tls: true
+
+  services:
+    grafana-service:
+      loadBalancer:
+        servers:
+          - url: "http://172.33.128.23:3200"
+        passHostHeader: true
